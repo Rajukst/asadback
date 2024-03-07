@@ -48,7 +48,6 @@ async function run() {
     const grahokCollection = client.db("talikhata").collection("allClients");
     const paymentList = client.db("talikhata").collection("allPayments");
 
-
     app.post("/users", async (req, res) => {
         const getData= req.body;
         const result = await grahokCollection.insertOne(getData)
@@ -63,7 +62,7 @@ async function run() {
       const cursor = paymentList.find({});
       const getData = await cursor.toArray();
       res.json(getData);
-      console.log(getData);
+      // console.log(getData);
     });
     app.post('/payment', async (req, res) => {
       const getData = req.body;
@@ -75,13 +74,13 @@ async function run() {
         const cursor = grahokCollection.find({});
         const getData = await cursor.toArray();
         res.json(getData);
-        console.log(getData);
+        // console.log(getData);
       });
       app.get("/detaCollection/:id", async(req, res)=>{
         const productId= req.params.id;
         const query = {_id: new ObjectId(productId)};
         const getCount= await grahokCollection.findOne(query);
-        console.log("getting a single product", getCount);
+        // console.log("getting a single product", getCount);
         res.send(getCount);
       })
       // getharing single user report data
@@ -89,16 +88,86 @@ async function run() {
         const productId= req.params.id;
         const query = {_id: new ObjectId(productId)};
         const getCount= await grahokCollection.findOne(query);
-        console.log("getting a single product", getCount);
+        // console.log("getting a single product", getCount);
         res.send(getCount);
       })
       app.get("/editdata/:id", async(req, res)=>{
         const productId= req.params.id;
         const query = {_id: new ObjectId(productId)};
         const getCount= await grahokCollection.findOne(query);
-        console.log("getting a single product", getCount);
+        // console.log("getting a single product", getCount);
         res.send(getCount);
       })
+
+      app.get("/deletefetchdata/:id", async(req, res)=>{
+        const productId= req.params.id;
+        const query = {_id: new ObjectId(productId)};
+        const getCount= await grahokCollection.findOne(query);
+        // console.log("getting a single product", getCount);
+        res.send(getCount);
+      })
+      app.delete('/deleteuserdata/:userId', async (req, res) => {
+        const userId = req.params.userId;
+        try {
+          // Delete all transactions associated with the user ID
+          const deleteResult = await paymentList.deleteMany({ usrId: userId });
+          console.log(`Deleted ${deleteResult.deletedCount} transactions for user with ID ${userId}`);
+      
+          // Delete the user from the allClients collection
+          const deleteClientResult = await grahokCollection.deleteOne({ _id: new ObjectId(userId) });
+          if (deleteClientResult.deletedCount === 0) {
+            console.log(`User with ID ${userId} not found in allClients collection`);
+          } else {
+            console.log(`Deleted user with ID ${userId} from allClients collection`);
+          }
+      
+          res.json({ message: `Deleted ${deleteResult.deletedCount} transactions and user from allClients collection` });
+        } catch (error) {
+          console.error('Error deleting user transactions:', error);
+          res.status(500).json({ message: 'Internal server error' });
+        }
+      });
+
+ // Delete all transactions associated with a specific user ID and the user from allClients collection
+//  app.delete('/deleteuserdata/:userId', async (req, res) => {
+//   const userId = req.params.userId;
+//   try {
+//     // Aggregate to find all unique userIds associated with the given userId
+//     const userPaymentUserIds = await paymentList.aggregate([
+//       { $match: { usrId: userId } },
+//       { $group: { _id: "$usrId" } }
+//     ]).toArray();
+
+//     // Extract unique userIds from the aggregation result
+//     const uniqueUserIds = userPaymentUserIds.map(user => user._id);
+
+//     console.log('User IDs:', uniqueUserIds); // Log all userIds
+
+//     // Delete all transactions associated with the user ID
+//     const deleteResult = await paymentList.deleteMany({ usrId: userId });
+
+//     res.json({ message: `Deleted ${deleteResult.deletedCount} transactions for user with ID ${userId}` });
+//   } catch (error) {
+//     console.error('Error deleting user transactions:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// });
+// Update ProductSaleList
+  app.put("/editdata/:id", async(req, res)=>{
+    const id= req.params.id;
+    const updateUser= req.body;
+    const filter = { _id : new ObjectId(id) }
+    const options = { upsert: true };
+    const updatedDoc = {
+      $set: {
+        name:updateUser.name,
+        mobile: updateUser.mobile,
+      }
+  }
+  const result = await grahokCollection.updateOne(filter, updatedDoc, options)
+  res.json(result)
+  })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
