@@ -152,21 +152,49 @@ async function run() {
 //     res.status(500).json({ message: 'Internal server error' });
 //   }
 // });
-// Update ProductSaleList
-  app.put("/editdata/:id", async(req, res)=>{
-    const id= req.params.id;
-    const updateUser= req.body;
-    const filter = { _id : new ObjectId(id) }
-    const options = { upsert: true };
-    const updatedDoc = {
-      $set: {
-        name:updateUser.name,
-        mobile: updateUser.mobile,
-      }
+app.put("/editdata/:id", async (req, res) => {
+  const userId = req.params.id;
+  const updateUser = req.body;
+  const filter = { _id: new ObjectId(userId) };
+  const options = { upsert: true };
+  const updatedDoc = {
+    $set: {
+      name: updateUser.name,
+      mobile: updateUser.mobile,
+    }
+  };
+
+  try {
+    // Update user information in allClients collection
+    const updateResult = await grahokCollection.updateOne(filter, updatedDoc, options);
+    console.log(`Updated user with ID ${userId} in allClients collection`);
+
+    // Update user information in allPayments collection
+    const updatePaymentsResult = await paymentList.updateMany({ usrId: userId }, updatedDoc);
+    console.log(`Updated ${updatePaymentsResult.modifiedCount} documents in allPayments collection`);
+
+    res.json({ message: `User information updated successfully` });
+  } catch (error) {
+    console.error('Error updating user information:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
-  const result = await grahokCollection.updateOne(filter, updatedDoc, options)
-  res.json(result)
-  })
+});
+
+// Update ProductSaleList
+  // app.put("/editdata/:id", async(req, res)=>{
+  //   const id= req.params.id;
+  //   const updateUser= req.body;
+  //   const filter = { _id : new ObjectId(id) }
+  //   const options = { upsert: true };
+  //   const updatedDoc = {
+  //     $set: {
+  //       name:updateUser.name,
+  //       mobile: updateUser.mobile,
+  //     }
+  // }
+  // const result = await grahokCollection.updateOne(filter, updatedDoc, options)
+  // res.json(result)
+  // })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
