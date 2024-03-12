@@ -180,22 +180,38 @@ app.put("/editdata/:id", async (req, res) => {
   }
 });
 
-// Update ProductSaleList
-  // app.put("/editdata/:id", async(req, res)=>{
-  //   const id= req.params.id;
-  //   const updateUser= req.body;
-  //   const filter = { _id : new ObjectId(id) }
-  //   const options = { upsert: true };
-  //   const updatedDoc = {
-  //     $set: {
-  //       name:updateUser.name,
-  //       mobile: updateUser.mobile,
-  //     }
-  // }
-  // const result = await grahokCollection.updateOne(filter, updatedDoc, options)
-  // res.json(result)
-  // })
 
+app.get("/reportTableData/:id", async(req, res)=>{
+  const productId= req.params.id;
+  const query = {_id: new ObjectId(productId)};
+  const getCount= await paymentList.findOne(query);
+  // console.log("getting a single product", getCount);
+  res.send(getCount);
+})
+// Update ProductSaleList
+  app.put("/editReportTabledata/:id", async(req, res)=>{
+    const id= req.params.id;
+    const updateUser= req.body;
+    const filter = { _id : new ObjectId(id) }
+    const options = { upsert: true };
+    const updatedDoc = {
+      $set: {
+        give:updateUser.give,
+        got: updateUser.got,
+        paydetails: updateUser.paydetails,
+        currentDate: updateUser.currentDate,
+      }
+  }
+  const result = await paymentList.updateOne(filter, updatedDoc, options)
+  res.json(result)
+  })
+  app.delete("/reporttabledata/:id", async (req, res) =>{
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await paymentList.deleteOne(query);
+    console.log("deleting size", result);
+    res.json(result);
+  })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -214,293 +230,3 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Telecom is Running on port ${port}`);
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
- app.post('/jwt', (req, res) => {
-      const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
-
-      res.send({ token })
-    })
-
-    // Warning: use verifyJWT before using verifyAdmin
-    const verifyAdmin = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email: email }
-      const user = await usersCollection.findOne(query);
-      if (user?.role !== 'admin') {
-        return res.status(403).send({ error: true, message: 'forbidden message' });
-      }
-      next();
-    }
-
-
-    // users related apis
-    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
-        const result = await usersCollection.find().toArray();
-        res.send(result);
-      });
-  
-      app.post('/users', async (req, res) => {
-        const user = req.body;
-        const query = { email: user.email }
-        const existingUser = await usersCollection.findOne(query);
-  
-        if (existingUser) {
-          return res.send({ message: 'user already exists' })
-        }
-  
-        const result = await usersCollection.insertOne(user);
-        res.send(result);
-      });
-  
-      // security layer: verifyJWT
-      // email same
-      // check admin
-      app.get('/users/admin/:email', verifyJWT, async (req, res) => {
-        const email = req.params.email;
-  
-        if (req.decoded.email !== email) {
-          res.send({ admin: false })
-        }
-  
-        const query = { email: email }
-        const user = await usersCollection.findOne(query);
-        const result = { admin: user?.role === 'admin' }
-        res.send(result);
-      })
-  
-      app.patch('/users/admin/:id', async (req, res) => {
-        const id = req.params.id;
-        console.log(id);
-        const filter = { _id: new ObjectId(id) };
-        const updateDoc = {
-          $set: {
-            role: 'admin'
-          },
-        };
-  
-        const result = await usersCollection.updateOne(filter, updateDoc);
-        res.send(result);
-  
-      })
-      // grahok data post request
-      app.post('/clientData', async (req, res) => {
-        const getData= req.body;
-        const result = await grahokCollection.insertOne(getData)
-        res.send(result);
-      })
-  
-  // getting results of single grahok data
-      app.get("/detaCollection/:id", async(req, res)=>{
-        const productId= req.params.id;
-        const query = {_id: new ObjectId(productId)};
-        const getSingleProduct= await grahokCollection.findOne(query);
-        console.log("getting a single product", getSingleProduct);
-        res.send(getSingleProduct);
-      })
-  // grahok payment data 
-  app.get("/calculation/:id", async(req, res)=>{
-    const productId= req.params.id;
-    const query = {_id: new ObjectId(productId)};
-    const getCount= await grahokCollection.findOne(query);
-    console.log("getting a single product", getCount);
-    res.send(getCount);
-  })
-  app.post("/payment", async(req, res)=>{
-    const add = req.body;
-    const addPayment = await paymentList.insertOne(add);
-    console.log("getting a User", addPayment);
-    res.json(addPayment);
-  })
-  app.get("/paymentData", async (req, res) => {
-    const cursor = paymentList.find({});
-    const getPaymentData = await cursor.toArray();
-    res.json(getPaymentData);
-    console.log(getPaymentData);
-  });
-  
-  app.put('/paymentData/:id',  async (req, res) => {
-    const today = new Date();
-    const nextPayment = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: 'numeric',
-  }).replace(/\//g, '-');
-    const id= req.params.id;
-    const filter = { _id : new ObjectId(id) }
-    const options = { upsert: true };
-    const updatedDoc = {
-        $set: {
-            updateDate: nextPayment
-        }
-    }
-    const result = await grahokCollection.updateOne(filter, updatedDoc, options);
-    res.send(result);
-    console.log(result)
-  });
-  app.put('/monthlypaymentData/:id',  async (req, res) => {
-    const today = new Date();
-    const nextPayment = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: 'numeric',
-  }).replace(/\//g, '-');
-    const id= req.params.id;
-    const filter = { _id : new ObjectId(id) }
-    const options = { upsert: true };
-    const updatedDoc = {
-        $set: {
-            updateDate: nextPayment
-        }
-    }
-    const result = await grahokCollection.updateOne(filter, updatedDoc, options);
-    res.send(result);
-    console.log(result)
-  });
-  
-  app.get("/todaysPayment/:date", async (req, res) => {
-  const getDate= `${req.params.date}`
-  const query ={updateDate : getDate} 
-  const result = await grahokCollection.find(query).toArray()
-  // console.log(getDate)
-  res.send(result)
-  // console.log(getDate)
-  })
-  
-  app.get("/allPayment", async (req, res) => {
-    const id = req.query.id;
-    const query = {id : id };
-    const getPayment = await paymentList.find(query).toArray();
-    res.send(getPayment);
-  });
-  
-*/
