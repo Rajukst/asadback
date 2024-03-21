@@ -55,11 +55,79 @@ async function run() {
 
       res.send({ token })
     })
-    app.post("/adminuser", async (req, res) => {
-      const getData= req.body;
-      const result = await adminUserList.insertOne(getData)
-      res.send(result);
-    })
+ // Warning: use verifyJWT before using verifyAdmin
+ const verifyAdmin = async (req, res, next) => {
+  const email = req.decoded.email;
+  const query = { email: email }
+  const user = await adminUserList.findOne(query);
+  if (user?.role !== 'admin') {
+    return res.status(403).send({ error: true, message: 'forbidden message' });
+  }
+  next();
+}
+
+/**
+ * 0. do not show secure links to those who should not see the links
+ * 1. use jwt token: verifyJWT
+ * 2. use verifyAdmin middleware
+*/
+
+// users related apis
+app.get('/adminusers', verifyJWT, verifyAdmin, async (req, res) => {
+  const result = await adminUserList.find().toArray();
+  res.send(result);
+});
+app.delete('/adminusers/:id', verifyJWT,verifyAdmin, async(req, res)=>{
+  const id= req.params.id;
+  const query= {_id: new ObjectId(id)}
+  const result= await adminUserList.deleteOne(query)
+  res.json(result)
+})
+app.post('/adminusers', async (req, res) => {
+  const user = req.body;
+  const query = { email: user.email }
+  const existingUser = await adminUserList.findOne(query);
+
+  if (existingUser) {
+    return res.send({ message: 'user already exists' })
+  }
+
+  const result = await adminUserList.insertOne(user);
+  res.send(result);
+});
+
+// security layer: verifyJWT
+// email same
+// check admin
+app.get('/adminusers/admin/:email', verifyJWT, async (req, res) => {
+  const email = req.params.email;
+
+  if (req.decoded.email !== email) {
+    res.send({ admin: false })
+  }
+
+  const query = { email: email }
+  const user = await adminUserList.findOne(query);
+  const result = { admin: user?.role === 'admin' }
+  res.send(result);
+})
+
+app.patch('/adminusers/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  console.log(id);
+  const filter = { _id: new ObjectId(id) };
+  const updateDoc = {
+    $set: {
+      role: 'admin'
+    },
+  };
+
+  const result = await adminUserList.updateOne(filter, updateDoc);
+  res.send(result);
+
+})
+
+// Normal User List
     app.post("/users", async (req, res) => {
         const getData= req.body;
         const result = await grahokCollection.insertOne(getData)
