@@ -51,8 +51,7 @@ async function run() {
 
     app.post('/jwt', (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '20m' })
-
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1hr' })
       res.send({ token })
     })
  // Warning: use verifyJWT before using verifyAdmin
@@ -73,7 +72,7 @@ async function run() {
 */
 
 // users related apis
-app.get('/adminusers', verifyJWT, verifyAdmin, async (req, res) => {
+app.get('/adminusers', verifyJWT, async (req, res) => {
   const result = await adminUserList.find().toArray();
   res.send(result);
 });
@@ -128,7 +127,7 @@ app.patch('/adminusers/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
 })
 
 // Normal User List
-    app.post("/users", async (req, res) => {
+    app.post("/users",  async (req, res) => {
         const getData= req.body;
         const result = await grahokCollection.insertOne(getData)
         res.send(result);
@@ -138,7 +137,7 @@ app.patch('/adminusers/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await paymentList.insertOne(getData);
       res.send(result);
     });
-    app.get('/paymentList', verifyJWT, async (req, res) => {
+    app.get('/paymentList',  async (req, res) => {
       const cursor = paymentList.find({});
       const getData = await cursor.toArray();
       res.json(getData);
@@ -150,13 +149,13 @@ app.patch('/adminusers/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
       res.send(result);
     });
     // getting results of posting all grahok data
-    app.get("/detaCollection", verifyJWT, async (req, res) => {
+    app.get("/detaCollection", async (req, res) => {
         const cursor = grahokCollection.find({});
         const getData = await cursor.toArray();
         res.json(getData);
         // console.log(getData);
       });
-      app.get("/detaCollection/:id", verifyJWT, async(req, res)=>{
+      app.get("/detaCollection/:id",  async(req, res)=>{
         const productId= req.params.id;
         const query = {_id: new ObjectId(productId)};
         const getCount= await grahokCollection.findOne(query);
@@ -164,14 +163,14 @@ app.patch('/adminusers/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
         res.send(getCount);
       })
       // getharing single user report data
-      app.get("/reportdata/:id", verifyJWT, async(req, res)=>{
+      app.get("/reportdata/:id",  async(req, res)=>{
         const productId= req.params.id;
         const query = {_id: new ObjectId(productId)};
         const getCount= await grahokCollection.findOne(query);
         // console.log("getting a single product", getCount);
         res.send(getCount);
       })
-      app.get("/editdata/:id", verifyJWT, async(req, res)=>{
+      app.get("/editdata/:id", async(req, res)=>{
         const productId= req.params.id;
         const query = {_id: new ObjectId(productId)};
         const getCount= await grahokCollection.findOne(query);
@@ -179,14 +178,14 @@ app.patch('/adminusers/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
         res.send(getCount);
       })
 
-      app.get("/deletefetchdata/:id", verifyJWT, async(req, res)=>{
+      app.get("/deletefetchdata/:id", async(req, res)=>{
         const productId= req.params.id;
         const query = {_id: new ObjectId(productId)};
         const getCount= await grahokCollection.findOne(query);
         // console.log("getting a single product", getCount);
         res.send(getCount);
       })
-      app.delete('/deleteuserdata/:userId', verifyJWT, async (req, res) => {
+      app.delete('/deleteuserdata/:userId', async (req, res) => {
         const userId = req.params.userId;
         try {
           // Delete all transactions associated with the user ID
@@ -207,7 +206,7 @@ app.patch('/adminusers/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
           res.status(500).json({ message: 'Internal server error' });
         }
       });
-app.put("/editdata/:id", verifyJWT, async (req, res) => {
+app.put("/editdata/:id",  async (req, res) => {
   const userId = req.params.id;
   const updateUser = req.body;
   const filter = { _id: new ObjectId(userId) };
@@ -236,7 +235,7 @@ app.put("/editdata/:id", verifyJWT, async (req, res) => {
 });
 
 
-app.get("/reportTableData/:id", verifyJWT, async(req, res)=>{
+app.get("/reportTableData/:id",  async(req, res)=>{
   const productId= req.params.id;
   const query = {_id: new ObjectId(productId)};
   const getCount= await paymentList.findOne(query);
@@ -244,7 +243,7 @@ app.get("/reportTableData/:id", verifyJWT, async(req, res)=>{
   res.send(getCount);
 })
 // Update ProductSaleList
-  app.put("/editReportTabledata/:id", verifyJWT, async(req, res)=>{
+  app.put("/editReportTabledata/:id", async(req, res)=>{
     const id= req.params.id;
     const updateUser= req.body;
     const filter = { _id : new ObjectId(id) }
@@ -260,7 +259,7 @@ app.get("/reportTableData/:id", verifyJWT, async(req, res)=>{
   const result = await paymentList.updateOne(filter, updatedDoc, options)
   res.json(result)
   })
-  app.delete("/reporttabledata/:id", verifyJWT, async (req, res) =>{
+  app.delete("/reporttabledata/:id",  async (req, res) =>{
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
     const result = await paymentList.deleteOne(query);
